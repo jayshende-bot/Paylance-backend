@@ -288,8 +288,3 @@ Recommended:
 
 ---
 
-# 🎯 Interview Talking Point
-
-"Implemented escrow-based marketplace payments using Stripe Connect with manual capture, automatic commission splits, webhook-based state management, and subscription billing in a production-ready Node.js architecture."
-
----

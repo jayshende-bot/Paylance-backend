@@ -30,24 +30,34 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const app = express();
 const server = http.createServer(app);
 
+// ── Allowed CORS origins ──────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://paylance-frontend.vercel.app',
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+};
+
 // ── Socket.io (disabled on Vercel serverless — no persistent connections) ─────
 if (!process.env.VERCEL) {
-  const io = new Server(server, {
-    cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
-      credentials: true,
-    },
-  });
+  const io = new Server(server, { cors: corsOptions });
   socketHandler(io);
   notificationService.init(io);
 }
 
 // ── Security & Logging ────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true,
-}));
+app.use(cors(corsOptions));
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(globalLimiter);
 
